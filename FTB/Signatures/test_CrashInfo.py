@@ -1206,6 +1206,34 @@ class MinidumpSelectorTest(unittest.TestCase):
         self.assertEqual(crashInfo.crashAddress, 0x3e800006acb)
 
 
+class AppleSierraParserTestCrash(unittest.TestCase):
+    def runTest(self):
+        # TO BE REPOSITIONED
+        config = ProgramConfiguration("test", "x86-64", "macosx64")
+
+        with open('apple-10-12-crash-report-example.txt', 'r') as f:
+            crashInfo = AppleCrashInfo([], [], config, f.read().splitlines())
+
+        self.assertEqual(len(crashInfo.backtrace), 4)
+        self.assertEqual(crashInfo.backtrace[0], "js::jit::DoTypeMonitorFallback")
+        self.assertEqual(crashInfo.backtrace[1], "??")
+        self.assertEqual(crashInfo.backtrace[2], "??")
+        self.assertEqual(crashInfo.backtrace[3], "EnterBaseline")
+
+        self.assertEqual(crashInfo.crashAddress, long(0x0000000000000000))
+
+
+class AppleSierraSelectorTest(unittest.TestCase):
+    def runTest(self):
+        config = ProgramConfiguration("test", "x86-64", "macosx64")
+
+        with open('apple-10-12-crash-report-example.txt', 'r') as f:
+            crashData = f.read().splitlines()
+
+        crashInfo = CrashInfo.fromRawCrashData([], [], config, crashData)
+        self.assertEqual(crashInfo.crashAddress, long(0x0000000000000000))
+>>>>>>> Add tests for macOS Sierra 10.12 support.
+
 class AppleParserTestCrash(unittest.TestCase):
     def runTest(self):
         config = ProgramConfiguration("test", "x86-64", "macosx")
