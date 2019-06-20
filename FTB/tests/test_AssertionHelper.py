@@ -65,6 +65,10 @@ windowsPathAssertBwSlashes = r"""
 Assertion failure: block->graph().osrBlock(), at c:\Users\fuzz1win\trees\mozilla-central\js\src\jit\Lowering.cpp:4691
 """
 
+windowsPathAssertDistIncludeBwFwdSlashes = r"""
+Assertion failure: !lookup(l).found(), at c:\Users\Administrator\shell-cache\js-dbg-64-dm-windows-0891f0fa044c\objdir-js\dist\include\js/HashTable.h:1733
+"""
+
 cppUnhandledException = """
 terminate called after throwing an instance of 'std::regex_error'
   what():  regex_error
@@ -206,19 +210,26 @@ def test_AssertionHelperTestChakraAssert():
 def test_AssertionHelperTestWindowsPathSanitizing():
     err1 = windowsPathAssertFwdSlashes.splitlines()
     err2 = windowsPathAssertBwSlashes.splitlines()
+    errDistInclude = windowsPathAssertDistIncludeBwFwdSlashes.splitlines()
 
     assertionMsg1 = AssertionHelper.getAssertion(err1)
     assertionMsg2 = AssertionHelper.getAssertion(err2)
+    assertionDistInclude = AssertionHelper.getAssertion(errDistInclude)
 
     sanitizedMsg1 = AssertionHelper.getSanitizedAssertionPattern(assertionMsg1)
     sanitizedMsg2 = AssertionHelper.getSanitizedAssertionPattern(assertionMsg2)
+    sanitizedMsgDistInclude = AssertionHelper.getSanitizedAssertionPattern(assertionDistInclude)
 
     expectedMsg = (r"Assertion failure: block->graph\(\)\.osrBlock\(\), at "
-                   r"([a-zA-Z]:)?/.+/Lowering\.cpp(:[0-9]+)+")
+                   r"([a-zA-Z]:)?(/|\\\\\\\\).+(/|\\\\\\\\)Lowering\.cpp(:[0-9]+)+")
+    expectedMsgDistInclude = (r"Assertion failure: !lookup\(l\)\.found\(\), at "
+                              r"([a-zA-Z]:)?(/|\\\\\\\\).+(/|\\\\\\\\)HashTable\.h(:[0-9]+)+")
 
     assert sanitizedMsg1 == expectedMsg
     assert sanitizedMsg2 == expectedMsg
+    assert sanitizedMsgDistInclude == expectedMsgDistInclude
     _check_regex_matches(err1, sanitizedMsg1)
+    assert expectedMsgDistInclude == assertionDistInclude
 
     # Backslash support is two-part:
     # 1. generate unix-style path patterns for windows paths (will not match using regex directly)
